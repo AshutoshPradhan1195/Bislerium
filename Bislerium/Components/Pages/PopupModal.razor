@@ -1,0 +1,35 @@
+﻿<div class="modal fade show" style="display:block; background-color: rgba(10,10,10,.8);"
+     role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@Title</h4>
+            </div>
+            <div class="modal-body">
+                @ChildContent
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" @onclick="@OnClose">Cancel</button>
+                <button type="button" class="btn btn-primary" @onclick=@OnFinish>@OkLabel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Title { get; set; }
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public string OkLabel { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback OnFinish { get; set; }
+
+
+}

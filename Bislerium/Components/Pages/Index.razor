@@ -1,0 +1,23 @@
+﻿@page "/"
+@using Bislerium.Data
+@inject NavigationManager NavManager
+
+<h3>Index</h3>
+
+@code {
+    [CascadingParameter]
+    private LoginState loginstate { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (loginstate.currentUser == null)
+        {
+            NavManager.NavigateTo("/login");
+        }
+        else
+        {
+            NavManager.NavigateTo("/home");
+        }
+    }
+
+}

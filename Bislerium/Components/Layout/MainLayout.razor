@@ -1,0 +1,43 @@
+﻿@using Bislerium.Components.Data
+@using Bislerium.Data
+@inherits LayoutComponentBase
+@inject NavigationManager NavManager
+
+<div class="page">
+
+    @if (loginState.currentUser != null)
+    {
+        <div class="sidebar">
+            <NavMenu logoutFunction="@logoutBtn" role="@loginState.currentUser.Role" />
+        </div>
+    }
+
+    <main>
+        <article class="content px-4">
+            <CascadingValue Value="@loginState">
+                @Body
+            </CascadingValue>
+        </article>
+
+    </main>
+</div>
+
+
+@code {
+
+    private LoginState loginState = new();
+
+
+    protected override void OnInitialized()
+    {
+        UsersService.SeedUsers();
+    }
+
+    public void logoutBtn()
+    {
+        loginState.currentUser = null;
+        NavManager.NavigateTo("/login");
+    }
+
+
+}

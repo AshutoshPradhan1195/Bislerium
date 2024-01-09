@@ -1,0 +1,166 @@
+﻿@page "/coffee"
+@using Bislerium.Components.Data
+@using Bislerium.Data
+
+<nav class="navbar navbar-light bg-light justify-content-between">
+    <h1>Coffees</h1>
+    <button class="btn btn-primary" type="button" onclick="@showAddCoffeeModal">
+        <span class="oi oi-plus" /> Add
+    </button>
+</nav>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Added On</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var coffee in coffeeData)
+        {
+            <tr>
+                <td>@coffee.Name</td>
+                <td>Rs @coffee.Price</td>
+                <td>@coffee.addedOn</td>
+                <td>
+
+                    <button @onclick="() => showDeleteModal(coffee)" class="btn btn-outline-danger">Remove</button>
+
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+@if (isShowModal)
+{
+    <PopupModal OkLabel="Add" Title="Add New Customer" OnClose="@hideAddUserModal" OnFinish="@addNewCoffee">
+        <form>
+            <div class="form-floating">
+                <input type="text" class="form-control username" @bind="name" placeholder="Name" />
+                <label for="floatingInput">Name</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control " @bind="price" placeholder="Price" />
+                <label for="floatingPassword">Price</label>
+            </div>
+
+            @if (showErrorModal)
+            {
+                <AlertPopup Message="@errorMessage" Type="warning" />
+            }
+
+        </form>
+
+    </PopupModal>
+}
+
+
+@if (isShowDeleteModal)
+{
+    <PopupModal OnClose="@hideDeleteModal" OnFinish="@deleteCoffee" Title="Remove Coffee" OkLabel="Remove">
+        <p>Are you sure you want to delete <strong>@deleteCoffeeData.Name</strong></p>
+
+        @if (showDeleteErrorModal)
+        {
+            <AlertPopup Message="@errorMessage" Type="warning" />
+        }
+    </PopupModal>
+}
+
+@code {
+    [CascadingParameter]
+    public LoginState loginState { get; set; }
+
+    public string name { get; set; }
+    public float price { get; set; }
+    public Role role { get; set; }
+    private string errorMessage { get; set; } = "gello";
+    public Boolean showErrorModal { get; set; } = false;
+    public Boolean showDeleteErrorModal { get; set; } = false;
+    private List<Coffee> coffees { get; set; }
+    public Coffee deleteCoffeeData { get; set; }
+    public Boolean isShowDeleteModal { get; set; } = false;
+    public Boolean isShowModal { get; set; } = false;
+    public List<Coffee> coffeeData { get; set; }
+
+    protected override void OnInitialized()
+    {
+        coffeeData = CoffeeServices.GetAll();
+    }
+
+    public void showAddCoffeeModal()
+    {
+        isShowModal = true;
+        name = "";
+        price = 0;
+
+    }
+
+    public void hideAddUserModal()
+    {
+        isShowModal = true;
+        name = "";
+        price = 0;
+
+    }
+
+    public void addNewCoffee()
+    {
+        try
+        {
+            errorMessage = "";
+            if (!String.IsNullOrEmpty(name) || price == 0)
+            {
+                coffees = CoffeeServices.Create(loginState.currentUser.Id, name, price);
+                isShowModal = false;
+
+            }
+            else
+            {
+                showErrorModal = true;
+                errorMessage = "Name or Price cannot be empty";
+            }
+        }
+        catch (Exception e)
+        {
+            errorMessage = e.Message;
+            showErrorModal = true;
+
+        }
+
+
+    }
+
+    public void showDeleteModal(Coffee coffee)
+    {
+        deleteCoffeeData = coffee;
+        isShowDeleteModal = true;
+    }
+
+    public void hideDeleteModal()
+    {
+        deleteCoffeeData = null;
+        isShowDeleteModal = false;
+    }
+
+    public void deleteCoffee()
+    {
+        try
+        {
+            errorMessage = "";
+            coffees = CoffeeServices.Delete(deleteCoffeeData.Id);
+            isShowDeleteModal = false;
+        }
+        catch (Exception e)
+        {
+            errorMessage = e.Message;
+            showDeleteErrorModal = true;
+        }
+
+
+    }
+}

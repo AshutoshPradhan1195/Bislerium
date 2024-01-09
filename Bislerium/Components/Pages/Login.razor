@@ -1,0 +1,86 @@
+@page "/login"
+@using Bislerium.Components.Data
+@using Bislerium.Data
+@inject NavigationManager NavManager
+
+
+
+
+<div style="display: flex; justify-content: center; align-items: center; width: 100% ; height:90vh">
+    
+    <div style="display: flex;justify-content: center; flex-direction: column; width: 450px; height: 300px; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19); padding-left: 20px; background-color:#CFF4FC">
+        @if (_showDefaultCredentials)
+        {
+            <div style="display: flex;justify-content: center;  flex-direction: column;">
+                <span>
+                    Username: <b>Happy</b>
+                </span>
+                <span>
+                    Password: <b>Snail</b>
+                </span>
+            </div>
+            <br />
+        }
+
+        <div>
+            <div>
+                <input id="UserName: " placeholder="Username" name="UserName" type="text" @bind-value="username" style="outline: none; width:95%; border-radius:0.25em; padding: 10px; margin-bottom: 10px; font-size: 15px; border:none" />
+            </div>
+            <div>
+                <input id="Password" placeholder="Password" name="Password" type="password" @bind-value="password" style=" outline: none; width:95%; border-radius:0.25em; padding: 10px; margin-bottom: 20px; font-size: 15px; border:none" />
+            </div>
+            <div>
+                <button type="submit" @onclick=@HandleLogin style=" background-color:lightgreen;outline: none; width:95%; border-radius:0.25em; padding: 10px; margin-bottom: 20px; font-size: 15px; text-align:center; border:none">
+                    Submit
+                </button>
+            </div>
+        </div>
+       
+    </div>
+
+
+</div>
+
+
+
+
+@code {
+    [CascadingParameter]
+    private LoginState loginState { get; set; }
+    private bool _showDefaultCredentials { get; set; }
+    private string username { get; set; }
+    private string password { get; set; }
+    private string _errorMessage = "";
+    
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            var user = UsersService.Login(UsersService.SeedUsername, UsersService.SeedPassword);
+            _showDefaultCredentials = user.HasInitialPassword;
+        }
+        catch { }
+
+        loginState.currentUser = null;
+        _errorMessage = "";
+    }
+
+    private void HandleLogin()
+    {
+        try
+        {
+            _errorMessage = "";
+            loginState.currentUser = UsersService.Login(username, password);
+            if (loginState.currentUser != null)
+            {
+                NavManager.NavigateTo("home");
+            }
+        }
+        catch (Exception e)
+        {
+            _errorMessage = e.Message;
+            Console.WriteLine(e);
+        }
+    }
+}

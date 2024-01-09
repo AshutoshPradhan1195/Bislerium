@@ -1,0 +1,170 @@
+﻿@page "/member"
+@using Bislerium.Components.Data
+@using Bislerium.Data
+
+
+
+<nav class="navbar navbar-light bg-light justify-content-between">
+    <h1>Members</h1>
+    <button class="btn btn-primary" type="button" onclick="@showAddMemberModal">
+        <span class="oi oi-plus" /> Add
+    </button>
+</nav>
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Full Name</th>
+            <th>Phone Number</th>
+            <th>MembershipDate</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var member in memberData)
+        {
+            <tr>
+                <td>@member.FullName</td>
+                <td>@member.PhoneNo</td>
+                <td>@member.MembershipDate</td>
+                <td>
+                    <button @onclick="() => showDeleteModal(member)" class="btn btn-outline-danger">Remove</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+@if (isShowModal)
+{
+    <PopupModal OkLabel="Add" Title="Add New Member" OnClose="@hideAddMemberModal" OnFinish="@addNewMember">
+        <form>
+            <div class="form-floating">
+                <input type="text" class="form-control name" @bind="fullName" placeholder="Full Name" />
+                <label for="floatingInput">Full Name</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control phoneNo" @bind="phoneNo" placeholder="Phone Number" />
+                <label for="floatingPassword">Phone No</label>
+            </div>
+            @if (showErrorModal)
+            {
+                <AlertPopup Message="@errorMessage" Type="warning" />
+            }
+        </form>
+
+    </PopupModal>
+}
+
+@if (isShowDeleteModal)
+{
+    <PopupModal OnClose="@hideDeleteModal" OnFinish="@deleteMember" Title="Remove Member" OkLabel="Remove">
+        <p>Are you sure you want to delete <strong>@deleteMemberData.FullName</strong> member</p>
+
+        @if (showDeleteErrorModal)
+        {
+            <AlertPopup Message="@errorMessage" Type="warning" />
+        }
+    </PopupModal>
+}
+
+
+
+@code {
+    [CascadingParameter]
+    public LoginState loginState { get; set; }
+
+    public string phoneNo { get; set; }
+    public string fullName { get; set; }
+
+    private string errorMessage { get; set; }
+    public Boolean showDeleteErrorModal { get; set; } = false;
+
+    public Boolean showErrorModal { get; set; } = false;
+    public Boolean isShowDeleteModal { get; set; } = false;
+
+    private Member deleteMemberData { get; set; }
+
+    private List<Member> members { get; set; }
+    public Boolean isShowModal { get; set; } = false;
+    public List<Member> memberData { get; set; }
+
+
+    protected override void OnInitialized()
+    {
+        memberData = MemberService.GetAll();
+    }
+
+    public void showAddMemberModal()
+    {
+        isShowModal = true;
+        fullName = "";
+        phoneNo = "";
+
+    }
+
+    public void hideAddMemberModal()
+    {
+        isShowModal = false;
+        fullName = "";
+        phoneNo = "";
+    }
+
+    public void addNewMember()
+    {
+        try
+        {
+            errorMessage = "";
+            if (!String.IsNullOrEmpty(fullName) || !String.IsNullOrEmpty(phoneNo))
+            {
+                members = MemberService.Create(loginState.currentUser.Id, fullName, phoneNo);
+                isShowModal = false;
+
+            }
+            else
+            {
+                errorMessage = "Please Enter Name and Phone Number";
+                showErrorModal = true;
+            }
+
+        }
+        catch (Exception e)
+        {
+            errorMessage = e.Message;
+            showErrorModal = true;
+
+        }
+
+
+    }
+
+    public void showDeleteModal(Member member)
+    {
+        deleteMemberData = member;
+        isShowDeleteModal = true;
+    }
+
+    public void hideDeleteModal()
+    {
+        deleteMemberData = null;
+        isShowDeleteModal = false;
+    }
+
+    public void deleteMember()
+    {
+        try
+        {
+            errorMessage = "";
+            members = MemberService.Delete(deleteMemberData.PhoneNo);
+            isShowDeleteModal = false;
+        }
+        catch(Exception e)
+        {
+            errorMessage = e.Message;
+            showDeleteErrorModal = true;
+        }
+
+
+    }
+}

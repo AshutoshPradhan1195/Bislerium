@@ -1,0 +1,194 @@
+﻿@page "/user"
+@using Bislerium.Components.Data
+@using Bislerium.Data
+
+
+
+    <nav class="navbar navbar-light bg-light justify-content-between">
+        <h1>Users</h1>
+    <button class="btn btn-primary" type="button" onclick="@showAddUserModal">
+            <span class="oi oi-plus" /> Add
+        </button>
+    </nav>
+
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Created By</th>
+                <th>Creation Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in userData)
+            {
+                <tr>
+                    <td>@user.Username</td>
+                    <td>@user.Role</td>
+                    <td>
+                        @{
+                            var creator = UsersService.GetById(user.CreatedBy);
+                            <span>@(creator == null ? "Unknown" : creator.Username)</span>
+                        }
+                    </td>
+                    <td>@user.CreatedAt</td>
+                <td>
+
+                        <button @onclick="() => showDeleteModal(user)" disabled = "@(creator == null? true: false)" class="btn btn-outline-danger">Remove</button>
+                    
+                </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    
+@if (isShowModal)
+{
+    <PopupModal OkLabel="Add" Title="Add New Customer" OnClose="@hideAddUserModal" OnFinish="@addNewUser">
+        <form>
+         <div class="form-floating">
+                <input type="text" class="form-control username" @bind="username" placeholder="Username" />
+            <label for="floatingInput">Username</label>
+        </div>
+        <div class="form-floating mb-3">
+                <input type="password" class="form-control password" @bind="password" placeholder="Password" />
+            <label for="floatingPassword">Password</label>
+        </div>
+        <div class="form-check">
+            <input id="userRole" type="radio" class="form-check-input" name="role" value="@Role.User"
+                @onchange="RoleChangeHandler" checked="@(role == Role.User)">
+            <label class="form-check-label" for="userRole">@Role.User</label>
+        </div>
+        <div class="form-check">
+            <input id="adminRole" type="radio" class="form-check-input" name="role" value="@Role.Admin"
+                @onchange="RoleChangeHandler" checked="@(role == Role.Admin)">
+            <label class="form-check-label" for="adminRole">@Role.Admin</label>
+        </div>
+
+            @if (showErrorModal)
+            {
+                <AlertPopup Message="@errorMessage" Type="warning" />
+            }
+            
+        </form>
+
+    </PopupModal>
+}
+
+
+@if (isShowDeleteModal)
+{
+    <PopupModal OnClose="@hideDeleteModal" OnFinish="@deleteMember" Title="Remove Member" OkLabel="Remove">
+        <p>Are you sure you want to delete <strong>@deleteUserData.Username</strong> member</p>
+
+        @if (showDeleteErrorModal)
+        {
+            <AlertPopup Message="@errorMessage" Type="warning" />
+        }
+    </PopupModal>
+}
+
+@code {
+    [CascadingParameter]
+    public LoginState loginState { get; set; }
+
+    public string username { get; set; }
+    public string password { get; set; }
+    public Role role { get; set; }
+    private string errorMessage { get; set; } = "gello";
+    public Boolean showErrorModal { get; set; } = false;
+    public Boolean showDeleteErrorModal { get; set; } = false;
+    private List<User> users { get; set; }
+    public User deleteUserData { get; set; }
+    public Boolean isShowDeleteModal { get; set; } = false;
+    public Boolean isShowModal { get; set; } = false;
+    public List<User> userData { get; set; }
+
+
+    private void RoleChangeHandler(ChangeEventArgs e)
+    {
+        role = (Role)Enum.Parse(typeof(Role), e.Value.ToString());
+    }
+
+    protected override void OnInitialized()
+    {
+        userData = UsersService.GetAll();
+    }
+
+    public void showAddUserModal ()
+    {
+        isShowModal = true;
+        password = "";
+        username = "";
+        role = Role.User;
+
+    }
+
+    public void hideAddUserModal()
+    {
+        isShowModal = false;
+        password = "";
+        username = "";
+        role = Role.User;
+
+    }
+
+    public void addNewUser()
+    {
+        try
+        {
+            errorMessage = "";
+            if (!String.IsNullOrEmpty(username) || !String.IsNullOrEmpty(password))
+            {
+                users = UsersService.Create(loginState.currentUser.Id, username, password, role);
+                isShowModal = false;
+
+            }
+            else
+            {
+                showErrorModal = true;
+                errorMessage = "Username or Password cannot be empty";
+            }
+        }
+        catch (Exception e)
+        { 
+            errorMessage = e.Message;
+            showErrorModal = true;
+
+        }
+
+
+    }
+
+    public void showDeleteModal(User user)
+    {
+        deleteUserData = user;
+        isShowDeleteModal = true;
+    }
+
+    public void hideDeleteModal()
+    {
+        deleteUserData = null;
+        isShowDeleteModal = false;
+    }
+
+    public void deleteMember()
+    {
+        try
+        {
+            errorMessage = "";
+            users = UsersService.Delete(deleteUserData.Id);
+            isShowDeleteModal = false;
+        }
+        catch (Exception e)
+        {
+            errorMessage = e.Message;
+            showDeleteErrorModal = true;
+        }
+
+
+    }
+}
