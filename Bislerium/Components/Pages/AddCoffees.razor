@@ -2,14 +2,16 @@
 @using Bislerium.Components.Data
 @using Bislerium.Data
 
+
 <nav class="navbar navbar-light bg-light justify-content-between">
     <h1>Coffees</h1>
     <button class="btn btn-primary" type="button" onclick="@showAddCoffeeModal">
         <span class="oi oi-plus" /> Add
     </button>
 </nav>
+<div>
 
-<table class="table">
+<table class="table" style="height:200px">
     <thead>
         <tr>
             <th>Name</th>
@@ -33,11 +35,12 @@
         }
     </tbody>
 </table>
+</div>
 
 
 @if (isShowModal)
 {
-    <PopupModal OkLabel="Add" Title="Add New Customer" OnClose="@hideAddUserModal" OnFinish="@addNewCoffee">
+    <PopupModal OkLabel="Add" Title="Add New Coffee" OnClose="@hideAddCoffeeModal" OnFinish="@addNewCoffee">
         <form>
             <div class="form-floating">
                 <input type="text" class="form-control username" @bind="name" placeholder="Name" />
@@ -59,6 +62,67 @@
 }
 
 
+
+
+<nav class="navbar navbar-light bg-light justify-content-between">
+    <h1>Add Ons</h1>
+    <button class="btn btn-primary" type="button" onclick="@showAddAddOnsModal">
+        <span class="oi oi-plus" /> Add
+    </button>
+</nav>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Added On</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var addOn in addOnData)
+        {
+            <tr>
+                <td>@addOn.Name</td>
+                <td>Rs @addOn.Price</td>
+                <td>@addOn.addedOn</td>
+                <td>
+
+                    <button @onclick="() => showDeleteAddOnsModal(addOn)" class="btn btn-outline-danger">Remove</button>
+
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+
+@if (isShowAddOnModal)
+{
+    <PopupModal OkLabel="Add" Title="Add New AddOn" OnClose="@hideAddAddOnsModal" OnFinish="@addNewAddOns">
+        <form>
+            <div class="form-floating">
+                <input type="text" class="form-control username" @bind="addName" placeholder="Name" />
+                <label for="floatingInput">Name</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control " @bind="addPrice" placeholder="Price" />
+                <label for="floatingPassword">Price</label>
+            </div>
+
+            @if (showAddOnErrorModal)
+            {
+                <AlertPopup Message="@errorAddOnsMessage" Type="warning" />
+            }
+
+        </form>
+
+    </PopupModal>
+}
+
+
+
 @if (isShowDeleteModal)
 {
     <PopupModal OnClose="@hideDeleteModal" OnFinish="@deleteCoffee" Title="Remove Coffee" OkLabel="Remove">
@@ -71,14 +135,24 @@
     </PopupModal>
 }
 
+@if (isShowAddOnDeleteModal)
+{
+    <PopupModal OnClose="@hideDeleteAddOnsModal" OnFinish="@deleteAddOns" Title="Remove AddOns" OkLabel="Remove">
+        <p>Are you sure you want to delete <strong>@deleteAddOnData.Name</strong></p>
+
+        @if (showAddOnDeleteErrorModal)
+        {
+            <AlertPopup Message="@errorAddOnsMessage" Type="warning" />
+        }
+    </PopupModal>
+}
+
 @code {
     [CascadingParameter]
     public LoginState loginState { get; set; }
-
     public string name { get; set; }
     public float price { get; set; }
-    public Role role { get; set; }
-    private string errorMessage { get; set; } = "gello";
+    private string errorMessage { get; set; }
     public Boolean showErrorModal { get; set; } = false;
     public Boolean showDeleteErrorModal { get; set; } = false;
     private List<Coffee> coffees { get; set; }
@@ -87,9 +161,24 @@
     public Boolean isShowModal { get; set; } = false;
     public List<Coffee> coffeeData { get; set; }
 
+    public string addName { get; set; }
+    public float addPrice { get; set; }
+    private string errorAddOnsMessage { get; set; }
+
+    public Boolean showAddOnErrorModal { get; set; } = false;
+    public Boolean showAddOnDeleteErrorModal { get; set; } = false;
+    private List<AddOns> addOns { get; set; }
+    public AddOns deleteAddOnData { get; set; }
+    public Boolean isShowAddOnDeleteModal { get; set; } = false;
+    public Boolean isShowAddOnModal { get; set; } = false;
+    public List<AddOns> addOnData { get; set; }
+    
+    //Coffee View Code
     protected override void OnInitialized()
     {
         coffeeData = CoffeeServices.GetAll();
+        addOnData = AddOnServices.GetAll();
+
     }
 
     public void showAddCoffeeModal()
@@ -100,9 +189,9 @@
 
     }
 
-    public void hideAddUserModal()
+    public void hideAddCoffeeModal()
     {
-        isShowModal = true;
+        isShowModal = false;
         name = "";
         price = 0;
 
@@ -113,7 +202,8 @@
         try
         {
             errorMessage = "";
-            if (!String.IsNullOrEmpty(name) || price == 0)
+            showErrorModal = false;
+            if (!String.IsNullOrEmpty(name) && price != 0)
             {
                 coffees = CoffeeServices.Create(loginState.currentUser.Id, name, price);
                 isShowModal = false;
@@ -152,6 +242,7 @@
         try
         {
             errorMessage = "";
+            showDeleteErrorModal = false;
             coffees = CoffeeServices.Delete(deleteCoffeeData.Id);
             isShowDeleteModal = false;
         }
@@ -163,4 +254,83 @@
 
 
     }
+
+    //AddOn View Code
+
+    public void showAddAddOnsModal()
+    {
+        isShowAddOnModal = true;
+        name = "";
+        price = 0;
+
+    }
+
+    public void hideAddAddOnsModal()
+    {
+        isShowAddOnModal = false;
+        name = "";
+        price = 0;
+
+    }
+
+    public void addNewAddOns()
+    {
+        try
+        {
+            errorAddOnsMessage = "";
+            showAddOnErrorModal = false;
+
+            if (!String.IsNullOrEmpty(addName) && addPrice != 0)
+            {
+                addOns = AddOnServices.Create(loginState.currentUser.Id, addName, addPrice);
+                isShowAddOnModal = false;
+
+            }
+            else
+            {
+                showAddOnErrorModal = true;
+                errorAddOnsMessage = "Name or Price cannot be empty";
+            }
+        }
+        catch (Exception e)
+        {
+            errorAddOnsMessage = e.Message;
+            showAddOnErrorModal = true;
+
+        }
+
+
+    }
+
+    public void showDeleteAddOnsModal(AddOns addOn)
+    {
+        deleteAddOnData = addOn;
+        isShowAddOnDeleteModal = true;
+    }
+
+    public void hideDeleteAddOnsModal()
+    {
+        deleteAddOnData = null;
+        isShowAddOnDeleteModal = false;
+    }
+
+    public void deleteAddOns()
+    {
+        try
+        {
+            errorAddOnsMessage = "";
+            showAddOnDeleteErrorModal = false;
+            addOns = AddOnServices.Delete(deleteAddOnData.Id);
+            isShowAddOnDeleteModal = false;
+        }
+        catch (Exception e)
+        {
+            errorAddOnsMessage = e.Message;
+            showAddOnDeleteErrorModal = true;
+        }
+
+
+    }
+
+
 }

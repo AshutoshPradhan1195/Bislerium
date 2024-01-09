@@ -75,5 +75,11 @@ namespace Bislerium.Components.Data
         {
             return Path.Combine(GetAppDirectoryPath(), "Purchases.json");
         }
+
+        public static string GetAppAddOnDirectoryPath()
+        {
+            return Path.Combine(GetAppDirectoryPath(), "AddOns.json");
+        }
+
     }
 }

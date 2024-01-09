@@ -47,7 +47,7 @@
     
 @if (isShowModal)
 {
-    <PopupModal OkLabel="Add" Title="Add New Customer" OnClose="@hideAddUserModal" OnFinish="@addNewUser">
+    <PopupModal OkLabel="Add" Title="Add New User" OnClose="@hideAddUserModal" OnFinish="@addNewUser">
         <form>
          <div class="form-floating">
                 <input type="text" class="form-control username" @bind="username" placeholder="Username" />

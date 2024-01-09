@@ -43,7 +43,7 @@ namespace Bislerium.Components.Data
 
         if (coffeeExists)
         {
-            throw new Exception("Member already exists.");
+            throw new Exception("Coffee already exists.");
         }
 
         coffees.Add(
@@ -70,7 +70,7 @@ namespace Bislerium.Components.Data
 
         if (coffee == null)
         {
-            throw new Exception("Member not found.");
+            throw new Exception("Coffee not found.");
         }
 
         coffees.Remove(coffee);

@@ -1,8 +1,311 @@
 ﻿@page "/home"
+@using Bislerium.Components.Data
+@using Bislerium.Data
 
-<h3>Home</h3>
+<div>
+    <nav class="navbar navbar-light bg-light justify-content-between">
+        <h1>Orders</h1>
+    </nav>
+    <div>
+
+        <div>
+            <select id="coffeeOrder" @bind="coffeeValue" style="padding:10px">
+                <option value="0">...</option>
+                @foreach (var coffee in coffees)
+                {
+                    <option value="@coffee.Id">@coffee.Name</option>
+                }
+            </select>
+
+            <select id="AddOnOrder" @bind="addOnValue" style="padding:10px">
+                <option>...</option>
+                <option value="0">None</option>
+                @foreach (var addOn in addOns)
+                {
+                    <option value="@addOn.Id">@addOn.Name</option>
+                }
+            </select>
+            <button class="btn btn-primary" type="button" @onclick="() => addOrder(coffeeValue, addOnValue)">
+                <span class="oi oi-plus" /> Add
+            </button>
+        </div>
+        
+
+    </div>
+
+    <div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Coffee</th>
+                    <th>Add Ins</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (coffeeName.Count > 0)
+                {
+                    @for (int i = 0; i < coffeeName.Count; i++)
+                    {
+                        <tr>
+                            <td>@coffeeName[i]</td>
+                            <td>@addOnName[i]</td>
+                        </tr>
+                    }
+                }
+                
+            </tbody>
+        </table>
+
+        <div>
+            Total: @price
+        </div>
+
+    </div>
+
+    <div>
+        MembershipNo: <input type="number" @bind="memberPhNo" />
+    </div>
+    <button class="btn btn-primary" type="button" @onclick="() => checkout(memberPhNo)">
+        Checkout
+    </button>
+
+</div>
+
+@if (showModal)
+{
+   <PopupModal OnClose="@closeModal" OnFinish="@closeModal" OkLabel="Ok">
+    <div>
+        @popupMessage
+    </div>
+    </PopupModal> 
+}
+
+
 
 
 @code {
+    [CascadingParameter]
+    public LoginState loginState { get; set; }
+    public Coffee coffee { get; set; }
+    public List<Coffee> coffees { get; set; }
+    public string coffeeValue { get; set; }
+    public string addOnValue { get; set; }
+    public string memberPhNo { get; set; }
+
+    public string popupMessage { get; set; }
+    public Boolean showModal { get; set; } = false;
+
+
+    public double price { get; set; } = 0;
+
+
+    public List<string> coffeeValues { get; set; } = new List<string>();
+
+    public List<string> addOnValues { get; set; } = new List<string>();
+
+    public List<string> coffeeName { get; set; } = new List<string>();
+
+    public List<string> addOnName { get; set; } = new List<string>();
+
+
+    public Orders order { get; set; }
+    public Member member { get; set; }
+
+    public List<Orders> orders { get; set; }
+
+    public AddOns addOn { get; set; }
+    public List<AddOns> addOns { get; set; }
+    public List<Orders> checkCoffee { get; set; }
+
+
+    public Boolean showName { get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+        coffees = CoffeeServices.GetAll();
+        addOns = AddOnServices.GetAll();
+
+
+    }
+
+    public void closeModal()
+    {
+        showModal = false;
+    }
+
+    public void addOrder(string coffeeId, string addOnId)
+    {
+        if (!string.IsNullOrEmpty(coffeeId) || coffeeId != "0")
+        {
+            if (!string.IsNullOrEmpty(addOnId)){
+
+                if (addOnId != "0")
+                {
+                    try
+                    {
+                        addOn = AddOnServices.GetById(new Guid(addOnId));
+                        addOnName.Add(addOn.Name);
+                        price = price + addOn.Price;
+
+
+                        coffee = CoffeeServices.GetById(new Guid(coffeeId));
+                        coffeeName.Add(coffee.Name);
+                        price = price + coffee.Price;
+
+                    }
+                    catch (Exception e)
+                    {
+
+                    }
+                }
+                else if(addOnId == "0")
+                {
+                    try
+                    {
+
+                        addOnName.Add("None");
+                        coffee = CoffeeServices.GetById(new Guid(coffeeId));
+                        coffeeName.Add(coffee.Name);
+                        price = price + coffee.Price;
+
+                    }
+                    catch (Exception e)
+                    {
+
+                    }
+                }
+
+            }
+            coffeeValues.Add(coffeeId);
+            addOnValues.Add(addOnId);
+        }
+
+    }
+
+    public void checkout(string phoneNumber)
+    {
+        Boolean isFreeCoffee = false;
+        if(coffeeValues.Count> 0)
+        {
+            try
+            {
+                if (isFreeCoffeeAvailable(phoneNumber))
+                {
+                    coffee = CoffeeServices.GetById(new Guid(coffeeValues.First()));
+                    price = price - coffee.Price;
+                    isFreeCoffee = true;
+                }
+                if (isRegularCustomer(phoneNumber))
+                {
+                    price = price * 0.9;
+                }
+
+                member = MemberService.GetByPhoneNo(phoneNumber);
+                if (member != null)
+                {
+                    OrderServices.Create(loginState.currentUser.Id, member.Id.ToString(), phoneNumber, coffeeValues, addOnValues, price, isFreeCoffee);
+
+                }
+                else
+                {
+                    OrderServices.Create(loginState.currentUser.Id, "0", "0", coffeeValues, addOnValues, price, isFreeCoffee);
+
+                }
+                //add popup model
+                if (isFreeCoffee)
+                {
+                    popupMessage = "Order has been checked out and free coffee has been added";
+                    showModal = true;
+                }
+                else
+                {
+                    popupMessage = "Order has been checked out ";
+                    showModal= true;
+                }
+
+            }
+            catch (Exception e)
+            {
+                //add error model
+
+            }
+
+            memberPhNo = "0";
+            coffeeValues.Clear();
+            addOnValues.Clear();
+            price = 0;
+            coffeeName.Clear();
+            addOnName.Clear();
+        }
+    }
+
+    public Boolean isRegularCustomer(string phoneNo)
+    {
+        Orders coffee;
+        DateTime checkEndDate = DateTime.Now;
+        DateTime checkStartDate = checkEndDate.AddDays(-30);
+        int count = 0;
+
+        try
+        {
+
+            checkCoffee = OrderServices.GetAllByPhoneNumber(phoneNo);
+            if (checkCoffee != null && phoneNo != "0")
+            {
+                if(checkCoffee.Count() > 0)
+                {
+                    for (int i = 0; i <= 31; i++)
+                    {
+                        DateTime dateToCheck = checkStartDate.AddDays(i);
+
+                        coffee = (checkCoffee.FirstOrDefault(x => x.OrderDate.Day == dateToCheck.Day));
+                        if (coffee != null)
+                        {
+                            count++;
+                        }
+
+                    }
+                }
+
+            }
+        }
+        catch (Exception e)
+        {
+
+        }
+
+        if(count >= 26)
+        {
+            return true;
+
+        }
+        else
+        {
+            return false;
+        }
+
+
+    }
+
+    public Boolean isFreeCoffeeAvailable(string phoneNo)
+    {
+        checkCoffee = OrderServices.GetAllByPhoneNumber(phoneNo);
+        if (checkCoffee != null)
+        {
+            if (checkCoffee.Count() % 10 == 0 && checkCoffee.Count != 0 && phoneNo != "0")
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+
+    }
 
 }
