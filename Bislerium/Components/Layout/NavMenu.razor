@@ -12,7 +12,32 @@
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
-        @if(role.ToString() == "Admin")
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="home">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Order
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="member">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Add Member
+            </NavLink>
+        </div>
+
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="change-password">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Change Password
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="transaction">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Transactions
+            </NavLink>
+        </div>
+
+         @if(role.ToString() == "Admin")
         {
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="user">
@@ -25,32 +50,6 @@
                 </NavLink>
             </div>
         }
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="member">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Add Member
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="home">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="change-password">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Change Password
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="transaction">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Transactions
-            </NavLink>
-        </div>
-
-        
 
         <div style="margin-left: 20px">
             <button class="nav-link px-3" onclick="@logoutFunction">Logout</button>

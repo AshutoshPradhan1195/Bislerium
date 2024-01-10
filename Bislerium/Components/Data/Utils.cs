@@ -5,12 +5,10 @@ using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography;
 using System.Text;
 using System.IO;
-using iText.Kernel.Pdf;
-using iText.Layout;
-using iText.Layout.Element;
-
 
 using System.Threading.Tasks;
+using iTextSharp.text.pdf;
+using iTextSharp.text;
 
 namespace Bislerium.Components.Data
 {
@@ -56,20 +54,71 @@ namespace Bislerium.Components.Data
 
         public static void GeneratePdf(List<Orders> orders, DateTime startDate, DateTime endDate)
         {
-            PdfDocument pdfDocument = new PdfDocument(new PdfWriter(new FileStream("C:/Users/Acer/source/repos/Bislerium/Bislerium/wwwroot/hello.pdf", FileMode.Create, FileAccess.Write)));
-            Document document = new Document(pdfDocument);
+            Document pdfDocument = new Document( );
+            PdfWriter.GetInstance(pdfDocument, new FileStream(Path.Combine( GetAppDirectoryPath(), $"{DateTime.Now.Ticks} report.pdf"), FileMode.Create)
+            );
+            pdfDocument.Open();
+
 
             Paragraph p = new Paragraph();
+            Paragraph coffees = new Paragraph();
+            Paragraph addons = new Paragraph();
+            double total = 0;
 
-            String line = "Hello! Welcome to iTextPdf";
-            document.Add(p.Add("Transaction Report"));
-            document.Close();
-            Console.WriteLine("Awesome PDF just got created.");
+            PdfPTable dataTable = new PdfPTable(5);
+
+
+
+            dataTable.AddCell("Member Name");
+            dataTable.AddCell("Coffees");
+            dataTable.AddCell("AddOns");
+            dataTable.AddCell("Price");
+            dataTable.AddCell("Date");
+
+            foreach(Orders order in orders)
+            {
+
+
+                dataTable.AddCell($"{order.MemberName}");
+                coffees.Clear();
+
+                for (int i = 0; i < order.CoffeeName.Count(); i++)
+                {
+                    coffees.Add($"{order.CoffeeName[i]}\n");
+                }
+
+                addons.Clear();
+
+                for (int i = 0; i < order.AddOnName.Count(); i++)
+                {
+                    addons.Add($"{order.AddOnName[i]}\n");
+                }
+                dataTable.AddCell(coffees);
+                dataTable.AddCell(addons);
+                dataTable.AddCell($"{order.Price}");
+                dataTable.AddCell($"{order.OrderDate}");
+
+            }
+
+            p.Add("Transaction Report ");
+            p.Add($"{startDate} to {endDate}");
+            
+
+            foreach(Orders order1 in orders)
+            {
+                total = total + order1.Price;
+            }
+
+            p.Add($"Revenue: {total}");
+            pdfDocument.Add(p);
+            pdfDocument.Add(dataTable);
+
+            pdfDocument.Close();
         }
 
         public static string GetAppDirectoryPath()
         {
-            return Path.Combine("C:/Users/Acer/source/repos/Bislerium/Bislerium/wwwroot",
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "Bislerium"
             );
         }
