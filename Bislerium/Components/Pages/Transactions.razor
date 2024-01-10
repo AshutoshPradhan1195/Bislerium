@@ -1,0 +1,156 @@
+﻿@page "/transaction"
+@using Bislerium.Components.Data
+
+<div>
+    <nav class="navbar navbar-light bg-light justify-content-between">
+        <h1>Orders</h1>
+
+
+        <div>
+            <div style="display: flex">
+                <div style="margin-right:5px">
+                    From:  <InputDate @bind-Value="startDate" class="btn" style="border:1px solid blue" />
+                </div>
+                <div style="margin-right:5px">
+                    To:  <InputDate @bind-Value="endDate"class="btn" style="border:1px solid blue" />
+                </div>
+                <select class="btn" style="border:1px solid blue ; margin-right:5px" @bind="filterBy">
+                    <option>
+                        ...
+                    </option>
+                    <option value=1>
+                        Price (Asc)
+                    </option>
+                    <option value=2>
+                        Price (Desc)
+                    </option>
+
+                    <option value=3>
+                        Oldest
+                    </option>
+                    <option value=4>
+                        Newest
+                    </option>
+                </select>
+                <button class="btn btn-primary" type="button" @onclick="() => filterByDate(startDate, endDate)" style="margin-right:5px">DateFilter</button>
+
+                <button class="btn btn-primary" type="button" @onclick="() => getFilteredData(filterBy) " style="margin-right:5px">Filter</button>
+                <button class="btn btn-primary" type="button" @onclick="() => Utils.GeneratePdf(orders, startDate, endDate)" style="margin-right:5px">
+                    <span class="oi oi-plus" /> Print
+                </button>
+            </div>
+
+            
+
+        </div>
+       
+    </nav>
+
+    <div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th >Coffees</th>
+                    <th >AddOns</th>
+                    <th>Total</th>
+                    <th>Date</th>
+
+                </tr>
+            </thead>
+            <br />
+            <tbody>
+                    @foreach(Orders order in orders)
+                    {
+                    <tr>
+
+                        @if(order.MemberName != "")
+                        {
+                            <td>@order.MemberName</td>
+                        }
+                        @if (order.MemberName == "")
+                        {
+                            <td>NA</td>
+                        }
+
+                        <td>
+                            <table>
+                                @foreach (string coffeeName in order.CoffeeName)
+                                {
+                                    <tr>
+                                        <td>@coffeeName</td>
+
+                                    </tr>
+                                }
+                            </table>
+                        </td>
+                        
+                        <td>
+                            <table>
+
+                                @foreach (string addOnName in order.AddOnName)
+                                {
+                                    <tr>
+                                        <td>@addOnName</td>
+                                    </tr>
+                                }
+                            </table>
+                        </td>
+                        
+                        
+                        <td>@order.Price</td>
+
+                        <td>@order.OrderDate</td>
+                    </tr>
+
+                    }
+               
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+@code{
+    public List<Orders> orders {get;set;}
+    public List<Orders> ordersByDates { get; set; }
+    public List<Orders> ordersByValues { get; set; }
+
+
+    public DateTime startDate { get; set; } = DateTime.Now.AddDays(-1);
+    public DateTime endDate { get; set; } = DateTime.Now;
+
+    public short filterBy { get; set; }
+
+    protected override void OnInitialized(){
+        orders = OrderServices.GetAll();
+        orders.RemoveAll(x => x.isFreeCoffee);
+    }
+
+    public void getFilteredData (short option){
+        if(option == 1)
+        {
+            orders = orders.OrderBy(x => x.Price).ToList();
+        }
+        if (option == 2)
+        {
+            orders = orders.OrderByDescending(x => x.Price).ToList();
+        }
+        if (option == 3)
+        {
+            orders = orders.OrderByDescending(x => x.OrderDate).ToList();
+        }
+        if (option == 4)
+        {
+            orders = orders.OrderByDescending(x => x.OrderDate).ToList();
+        }
+    }
+
+    public void filterByDate (DateTime startDate, DateTime endDate) {
+        List<Orders> orderDateValues = OrderServices.GetAll();
+
+        ordersByDates = orderDateValues.Where((x => x.OrderDate >= startDate && x.OrderDate <= endDate)).OrderBy(x => x.OrderDate).ToList();
+        
+        orders = ordersByDates;
+    }
+}

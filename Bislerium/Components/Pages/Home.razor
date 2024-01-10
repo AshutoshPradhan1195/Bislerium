@@ -62,8 +62,14 @@
 
     </div>
 
-    <div>
-        MembershipNo: <input type="number" @bind="memberPhNo" />
+    <div style="display: flex; align-items: center; ">
+        <div style="padding-top: 10px; padding-bottom: 10px; padding-right:10px">
+            MembershipNo: <input type="number" @bind="memberPhNo" />
+
+        </div>
+        <button class="btn btn-primary" type="button" @onclick="() => checkMembership(memberPhNo)">
+            Check
+        </button>
     </div>
     <button class="btn btn-primary" type="button" @onclick="() => checkout(memberPhNo)">
         Checkout
@@ -93,6 +99,7 @@
     public string memberPhNo { get; set; }
 
     public string popupMessage { get; set; }
+    public Boolean isFreeCoffee { get; set; } = false;
     public Boolean showModal { get; set; } = false;
 
 
@@ -182,33 +189,54 @@
 
     }
 
-    public void checkout(string phoneNumber)
+    public void checkMembership(string phoneNumber)
     {
-        Boolean isFreeCoffee = false;
-        if(coffeeValues.Count> 0)
+        Boolean isRepeatFreeCoffee = isFreeCoffee;
+        if (coffeeValues.Count > 0)
         {
             try
             {
-                if (isFreeCoffeeAvailable(phoneNumber))
+                if (isFreeCoffeeAvailable(phoneNumber) && !isRepeatFreeCoffee)
                 {
                     coffee = CoffeeServices.GetById(new Guid(coffeeValues.First()));
                     price = price - coffee.Price;
                     isFreeCoffee = true;
+                    popupMessage = "Free Coffee Addded";
+                    showModal = true;
+                }
+                else
+                {
+                    isFreeCoffee = false;
                 }
                 if (isRegularCustomer(phoneNumber))
                 {
                     price = price * 0.9;
+                    popupMessage = "Regular Member Discount Addded";
+                    showModal = true;
                 }
+            }
+            catch (Exception e)
+            {
 
+            }
+        }
+    }
+
+    public void checkout(string phoneNumber)
+    {
+        if(coffeeValues.Count> 0)
+        {
+            try
+            {
                 member = MemberService.GetByPhoneNo(phoneNumber);
                 if (member != null)
                 {
-                    OrderServices.Create(loginState.currentUser.Id, member.Id.ToString(), phoneNumber, coffeeValues, addOnValues, price, isFreeCoffee);
+                    OrderServices.Create(loginState.currentUser.Id, member.Id.ToString(), phoneNumber, coffeeValues, addOnValues, price, isFreeCoffee, coffeeName, addOnName);
 
                 }
                 else
                 {
-                    OrderServices.Create(loginState.currentUser.Id, "0", "0", coffeeValues, addOnValues, price, isFreeCoffee);
+                    OrderServices.Create(loginState.currentUser.Id, "0", "0", coffeeValues, addOnValues, price, isFreeCoffee, coffeeName, addOnName);
 
                 }
                 //add popup model
@@ -289,20 +317,27 @@
 
     public Boolean isFreeCoffeeAvailable(string phoneNo)
     {
+
         checkCoffee = OrderServices.GetAllByPhoneNumber(phoneNo);
-        if (checkCoffee != null)
+        member = MemberService.GetByPhoneNo(phoneNo);
+
+        if (checkCoffee != null && phoneNo != "0" && !string.IsNullOrEmpty(phoneNo) && member != null)
         {
-            if (checkCoffee.Count() % 10 == 0 && checkCoffee.Count != 0 && phoneNo != "0")
+            if (checkCoffee.Count() % 10 == 0 && checkCoffee.Count != 0 )
             {
                 return true;
             }
             else
             {
+                popupMessage = "Member Found";
+                showModal = true;
                 return false;
             }
         }
         else
         {
+            popupMessage = "Member Not Found";
+            showModal = true;
             return false;
         }
 

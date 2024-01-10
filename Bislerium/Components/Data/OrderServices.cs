@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
 
 namespace Bislerium.Components.Data
 {
@@ -36,21 +31,35 @@ namespace Bislerium.Components.Data
             return JsonSerializer.Deserialize<List<Orders>>(json);
         }
 
-        public static List<Orders> Create(Guid id, string memberId, string phoneNo, List<string> CoffeeId, List<string> AddOnId, double Price, Boolean isFreeCoffee)
+        public static List<Orders> Create(Guid id, string memberId, string phoneNo, List<string> CoffeeId, List<string> AddOnId, double Price, Boolean isFreeCoffee, List<string> CoffeeName, List<string> AddOnName)
         {
             List<Orders> orders = GetAll();
+            string name;
+
+            if (phoneNo != "0")
+            {
+                 name = MemberService.GetByPhoneNo(phoneNo).FullName;
+
+            }
+            else
+            {
+                name = "";
+            }
 
             orders.Add(
                 new Orders
                 {
                     MemberId = memberId,
+                    MemberName =  name,
                     PhoneNumber = phoneNo,
                     CoffeeId = CoffeeId,
+                    CoffeeName = CoffeeName,
+                    AddOnName = AddOnName,
                     AddOnId = AddOnId,
                     Price   = Price,
                     isFreeCoffee = isFreeCoffee
                 }
-            ); ; ;
+            );;; ; ;
             SaveAll(orders);
             return orders;
         }

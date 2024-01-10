@@ -4,6 +4,12 @@ using System.Linq;
 using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography;
 using System.Text;
+using System.IO;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
+
+
 using System.Threading.Tasks;
 
 namespace Bislerium.Components.Data
@@ -46,6 +52,19 @@ namespace Bislerium.Components.Data
             );
 
             return CryptographicOperations.FixedTimeEquals(inputHash, hash);
+        }
+
+        public static void GeneratePdf(List<Orders> orders, DateTime startDate, DateTime endDate)
+        {
+            PdfDocument pdfDocument = new PdfDocument(new PdfWriter(new FileStream("C:/Users/Acer/source/repos/Bislerium/Bislerium/wwwroot/hello.pdf", FileMode.Create, FileAccess.Write)));
+            Document document = new Document(pdfDocument);
+
+            Paragraph p = new Paragraph();
+
+            String line = "Hello! Welcome to iTextPdf";
+            document.Add(p.Add("Transaction Report"));
+            document.Close();
+            Console.WriteLine("Awesome PDF just got created.");
         }
 
         public static string GetAppDirectoryPath()
