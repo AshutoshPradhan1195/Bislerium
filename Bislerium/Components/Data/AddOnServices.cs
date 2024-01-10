@@ -57,6 +57,16 @@ namespace Bislerium.Components.Data
             return addOns;
         }
 
+        public static void changePrice(Guid id, double price)
+        {
+
+            List<AddOns> addOns = GetAll();
+            AddOns addOn = addOns.FirstOrDefault(x => x.Id == id);
+
+            addOn.Price = price;
+            SaveAll(addOns);
+
+        }
         public static AddOns GetById(Guid id)
         {
             List<AddOns> addOns = GetAll();

@@ -29,6 +29,7 @@
                 <td>
 
                     <button @onclick="() => showDeleteModal(coffee)" class="btn btn-outline-danger">Remove</button>
+                        <button @onclick="() => showCoffeePriceModal(coffee)" class="btn btn-outline-danger">Edit Price</button>
 
                 </td>
             </tr>
@@ -62,6 +63,34 @@
 }
 
 
+@if (isShowPriceModal)
+{
+    <PopupModal OkLabel="Edit" Title="Change AddOn Price" OnClose="@hidePriceModal" OnFinish="@editAddOnPrice">
+        <form>
+            <div class="form-floating">
+                <input type="number" class="form-control username" @bind="editAddOn.Price" placeholder="Price" />
+                <label for="floatingInput">Price</label>
+            </div>
+        </form>
+
+    </PopupModal>
+}
+
+@if (isShowCoffeePriceModal)
+{
+    <PopupModal OkLabel="Edit" Title="Change AddOn Price" OnClose="@hideCoffeePriceModal" OnFinish="@editCoffeePrice">
+        <form>
+            <div class="form-floating">
+                <input type="number" class="form-control username" @bind="editCoffee.Price" placeholder="Price" />
+                <label for="floatingInput">Price</label>
+            </div>
+        </form>
+
+    </PopupModal>
+}
+
+
+
 
 
 <nav class="navbar navbar-light bg-light justify-content-between">
@@ -89,6 +118,8 @@
                 <td>
 
                     <button @onclick="() => showDeleteAddOnsModal(addOn)" class="btn btn-outline-danger">Remove</button>
+                    <button class="btn btn-outline-danger" @onclick="() =>  showPriceModal(addOn)">Edit Price</button>
+
 
                 </td>
             </tr>
@@ -159,11 +190,21 @@
     public Coffee deleteCoffeeData { get; set; }
     public Boolean isShowDeleteModal { get; set; } = false;
     public Boolean isShowModal { get; set; } = false;
+    public Boolean showPriceErrorModal { get; set; } = false;
+
+    public AddOns editAddOn { get; set; }
+    public Coffee editCoffee { get; set; }
+
+    public Boolean isShowCoffeePriceModal { get; set; } = false;
+
+    public Boolean isShowPriceModal { get; set; } = false;
     public List<Coffee> coffeeData { get; set; }
 
     public string addName { get; set; }
     public float addPrice { get; set; }
     private string errorAddOnsMessage { get; set; }
+    private string errorPriceMessage { get; set; }
+
 
     public Boolean showAddOnErrorModal { get; set; } = false;
     public Boolean showAddOnDeleteErrorModal { get; set; } = false;
@@ -172,7 +213,7 @@
     public Boolean isShowAddOnDeleteModal { get; set; } = false;
     public Boolean isShowAddOnModal { get; set; } = false;
     public List<AddOns> addOnData { get; set; }
-    
+
     //Coffee View Code
     protected override void OnInitialized()
     {
@@ -189,12 +230,66 @@
 
     }
 
+    public void showPriceModal(AddOns addon)
+    {
+        isShowPriceModal = true;
+        editAddOn = addon;
+
+    }
+
+    public void showCoffeePriceModal(Coffee coffee)
+    {
+        isShowCoffeePriceModal = true;
+        editCoffee = coffee;
+    }
+
+
+    public void hideCoffeePriceModal()
+    {
+        isShowCoffeePriceModal = false;
+        editCoffee = null;
+
+    }
+
+
+    public void editCoffeePrice()
+    {
+        try
+        {
+            CoffeeServices.changePrice(editCoffee.Id, editCoffee.Price);
+            hideCoffeePriceModal();
+        }
+        catch (Exception e)
+        {
+
+        }
+    }
+    public void hidePriceModal()
+    {
+        isShowPriceModal = false;
+        editAddOn = null;
+
+    }
+
     public void hideAddCoffeeModal()
     {
         isShowModal = false;
         name = "";
         price = 0;
 
+    }
+
+    public void editAddOnPrice()
+    {
+        try
+        {
+            AddOnServices.changePrice(editAddOn.Id, editAddOn.Price);
+            hidePriceModal();
+        }
+        catch(Exception e)
+        {
+            
+        }
     }
 
     public void addNewCoffee()

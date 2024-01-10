@@ -63,7 +63,7 @@ namespace Bislerium.Components.Data
         return coffees.FirstOrDefault(x => x.Id == id);
     }
 
-        public static void changePrice(Guid id, float price)
+        public static void changePrice(Guid id, double price)
         {
         
             List<Coffee> coffees = GetAll();

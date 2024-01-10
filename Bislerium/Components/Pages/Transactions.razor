@@ -35,7 +35,7 @@
                 <button class="btn btn-primary" type="button" @onclick="() => filterByDate(startDate, endDate)" style="margin-right:5px">DateFilter</button>
 
                 <button class="btn btn-primary" type="button" @onclick="() => getFilteredData(filterBy) " style="margin-right:5px">Filter</button>
-                <button class="btn btn-primary" type="button" @onclick="() => Utils.GeneratePdf(orders, startDate, endDate)" style="margin-right:5px">
+                <button class="btn btn-primary" type="button" @onclick="() => printPDF()" style="margin-right:5px">
                     <span class="oi oi-plus" /> Print
                 </button>
             </div>
@@ -109,12 +109,24 @@
         </table>
     </div>
 
+    @if (showModal)
+    {
+        <PopupModal OnClose="@closeModal" OnFinish="@closeModal" OkLabel="Ok">
+            <div>
+                @popupMessage
+            </div>
+        </PopupModal>
+    }
+
 </div>
 
 @code{
     public List<Orders> orders {get;set;}
     public List<Orders> ordersByDates { get; set; }
     public List<Orders> ordersByValues { get; set; }
+
+    public Boolean showModal { get; set; } = false;
+    public string popupMessage { get; set; }
 
 
     public DateTime startDate { get; set; } = DateTime.Now.AddDays(-1);
@@ -127,6 +139,18 @@
         orders.RemoveAll(x => x.isFreeCoffee);
     }
 
+    public void closeModal()
+    {
+        showModal = false;
+        popupMessage = "";
+    } 
+
+    public void printPDF()
+    {
+        Utils.GeneratePdf(orders, startDate, endDate);
+        showModal = true;
+        popupMessage = "PDF generated";
+    }
     public void getFilteredData (short option){
         if(option == 1)
         {
@@ -150,7 +174,7 @@
         List<Orders> orderDateValues = OrderServices.GetAll();
 
         ordersByDates = orderDateValues.Where((x => x.OrderDate >= startDate && x.OrderDate <= endDate)).OrderBy(x => x.OrderDate).ToList();
-        
+        ordersByDates.RemoveAll(x => x.isFreeCoffee);
         orders = ordersByDates;
     }
 }
