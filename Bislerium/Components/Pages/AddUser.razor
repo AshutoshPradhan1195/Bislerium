@@ -141,7 +141,7 @@
         try
         {
             errorMessage = "";
-            if (!String.IsNullOrEmpty(username) || !String.IsNullOrEmpty(password))
+            if (!String.IsNullOrEmpty(username) && !String.IsNullOrEmpty(password))
             {
                 users = UsersService.Create(loginState.currentUser.Id, username, password, role);
                 isShowModal = false;

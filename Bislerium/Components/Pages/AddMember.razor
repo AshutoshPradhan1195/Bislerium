@@ -116,7 +116,7 @@
         try
         {
             errorMessage = "";
-            if (!String.IsNullOrEmpty(fullName) || !String.IsNullOrEmpty(phoneNo))
+            if (!String.IsNullOrEmpty(fullName) && !String.IsNullOrEmpty(phoneNo) && phoneNo != "0")
             {
                 members = MemberService.Create(loginState.currentUser.Id, fullName, phoneNo);
                 isShowModal = false;
