@@ -162,11 +162,11 @@
         }
         if (option == 3)
         {
-            orders = orders.OrderByDescending(x => x.OrderDate).ToList();
+            orders = orders.OrderBy(x => x.OrderDate).ToList();
         }
         if (option == 4)
         {
-            orders = orders.OrderBy(x => x.OrderDate).ToList();
+            orders = orders.OrderByDescending(x => x.OrderDate).ToList();
         }
     }
 

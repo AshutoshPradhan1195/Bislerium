@@ -61,13 +61,15 @@ namespace Bislerium.Components.Data
 
 
             Paragraph p = new Paragraph();
+            Paragraph bottom = new Paragraph();
+
             Paragraph coffees = new Paragraph();
             Paragraph addons = new Paragraph();
             double total = 0;
 
             PdfPTable dataTable = new PdfPTable(5);
-
-
+            dataTable.SpacingBefore = 10f;
+            dataTable.SpacingAfter = 12.5f;
 
             dataTable.AddCell("Member Name");
             dataTable.AddCell("Coffees");
@@ -77,28 +79,63 @@ namespace Bislerium.Components.Data
 
             foreach(Orders order in orders)
             {
+                string orderCol = "";
+                string addCol = "";
 
 
                 dataTable.AddCell($"{order.MemberName}");
                 coffees.Clear();
 
-                for (int i = 0; i < order.CoffeeName.Count(); i++)
+                foreach(string coffeeName in order.CoffeeName)
                 {
-                    coffees.Add($"{order.CoffeeName[i]}\n");
+                    orderCol += coffeeName + " ";
                 }
 
-                addons.Clear();
-
-                for (int i = 0; i < order.AddOnName.Count(); i++)
+                foreach (string addName in order.AddOnName)
                 {
-                    addons.Add($"{order.AddOnName[i]}\n");
+                    addCol += addName + " ";
                 }
-                dataTable.AddCell(coffees);
-                dataTable.AddCell(addons);
+
+                dataTable.AddCell(orderCol);
+                dataTable.AddCell(addCol);
                 dataTable.AddCell($"{order.Price}");
                 dataTable.AddCell($"{order.OrderDate}");
+            }
+
+            var topCoffee = getTopCoffeePurchases(orders);
+
+            var topAddon = getTopAddOn(orders);
+
+            PdfPTable topTable = new PdfPTable(2);
+
+            topTable.SpacingBefore = 10f;
+            topTable.SpacingAfter = 12.5f;
+
+
+
+            topTable.AddCell("Coffee");
+            topTable.AddCell("Add Ons");
+
+            if (topCoffee != null)
+            {
+                string topCoffeeCol = "";
+                string topAddOnCol = "";
+
+
+                foreach (string coffeeName in topCoffee)
+                {
+                    topCoffeeCol += coffeeName;
+                }
+
+                foreach (string topAddOnName in topAddon)
+                {
+                    topAddOnCol += topAddon;
+                }
+                topTable.AddCell(topAddOnCol);
 
             }
+
+
 
             p.Add("Transaction Report ");
             p.Add($"{startDate} to {endDate}");
@@ -109,20 +146,46 @@ namespace Bislerium.Components.Data
                 total = total + order1.Price;
             }
 
-            p.Add($"Revenue: {total}");
+
+
+            bottom.Add($"           Revenue: {total}");
             pdfDocument.Add(p);
             pdfDocument.Add(dataTable);
+            pdfDocument.Add(bottom);
+            pdfDocument.Add(topTable);
+
 
             pdfDocument.Close();
         }
 
+        public static List<string> getTopCoffeePurchases(List<Orders> orders)
+        {
+                foreach(Orders order in orders)
+            {
+                var most = order.CoffeeName.OrderByDescending(grp => grp.Count())
+                .Select(grp => grp).Take(5);
+                return most.ToList();
+            }
+            return null;
+        }
+
+        public static List<string> getTopAddOn(List<Orders> orders)
+        {
+            foreach (Orders order in orders)
+            {
+                var most = order.AddOnName.OrderByDescending(grp => grp.Count())
+                .Select(grp => grp).Take(5);
+                return most.ToList();
+            }
+            return null;
+        }
         public static string GetAppDirectoryPath()
         {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
                 "Bislerium"
             );
         }
-
+    
         public static string GetAppUsersFilePath()
         {
             return Path.Combine(GetAppDirectoryPath(), "users.json");
